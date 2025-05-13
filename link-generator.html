@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Link Generator</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        padding: 0;
+      }
+      form {
+        margin-bottom: 20px;
+      }
+      label {
+        display: block;
+        margin-bottom: 10px;
+      }
+      input, button {
+        margin-bottom: 15px;
+        padding: 8px;
+        width: 100%;
+        max-width: 400px;
+        font-size: 14px;
+      }
+      #generated-link {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #f4f4f4;
+        border: 1px solid #ddd;
+        word-wrap: break-word;
+      }
+      #copyButton {
+        margin-top: 10px;
+        padding: 8px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Map Link Generator</h1>
+    <p>Fill in the parameters below to generate a link to your map:</p>
+
+    <form id="mapForm">
+      <label for="apiKey">API Key:</label>
+      <input type="text" id="apiKey" name="apiKey" placeholder="Enter your API key" required>
+
+      <label for="itemId">Map Item ID:</label>
+      <input type="text" id="itemId" name="itemId" placeholder="Enter the map item ID" required>
+
+      <label for="center">Center (longitude,latitude):</label>
+      <input type="text" id="center" name="center" placeholder="-117.81,34.03">
+
+      <label for="minZoom">Minimum Zoom Level:</label>
+      <input type="number" id="minZoom" name="minZoom" placeholder="10">
+
+      <label for="maxZoom">Maximum Zoom Level:</label>
+      <input type="number" id="maxZoom" name="maxZoom" placeholder="13">
+
+      <label for="defaultZoom">Default Zoom Level:</label>
+      <input type="number" id="defaultZoom" name="defaultZoom" placeholder="11">
+
+      <label for="extent">Extent (xmin,ymin,xmax,ymax):</label>
+      <input type="text" id="extent" name="extent" placeholder="-118.0,33.5,-117.5,34.5">
+
+      <button type="button" id="generateLink">Generate Link</button>
+    </form>
+
+    <h2>Generated Link:</h2>
+    <div id="generated-link">Your link will appear here...</div>
+    <button id="copyButton" style="display: none;">Copy Link</button>
+
+    <script>
+      document.getElementById("generateLink").addEventListener("click", function () {
+        // Base URL for the map
+        const baseUrl = "https://jjkohler.github.io/map-serve/map.html";
+
+        // Get form values
+        const apiKey = document.getElementById("apiKey").value;
+        const itemId = document.getElementById("itemId").value;
+        const center = document.getElementById("center").value;
+        const minZoom = document.getElementById("minZoom").value;
+        const maxZoom = document.getElementById("maxZoom").value;
+        const defaultZoom = document.getElementById("defaultZoom").value;
+        const extent = document.getElementById("extent").value;
+
+        // Build the query string
+        const params = new URLSearchParams();
+        if (apiKey) params.append("apiKey", apiKey);
+        if (itemId) params.append("itemId", itemId);
+        if (center) params.append("center", center);
+        if (minZoom) params.append("minZoom", minZoom);
+        if (maxZoom) params.append("maxZoom", maxZoom);
+        if (defaultZoom) params.append("defaultZoom", defaultZoom);
+        if (extent) params.append("extent", extent);
+
+        // Generate the full URL
+        const fullUrl = `${baseUrl}?${params.toString()}`;
+
+        // Display the generated link
+        const linkDiv = document.getElementById("generated-link");
+        linkDiv.textContent = fullUrl;
+        linkDiv.style.wordWrap = "break-word";
+
+        // Show the "Copy" button
+        const copyButton = document.getElementById("copyButton");
+        copyButton.style.display = "inline-block";
+
+        // Add functionality to copy the link
+        copyButton.onclick = function () {
+          navigator.clipboard.writeText(fullUrl).then(() => {
+            alert("Link copied to clipboard!");
+          }).catch(err => {
+            console.error("Failed to copy link: ", err);
+          });
+        };
+      });
+    </script>
+  </body>
+</html>
