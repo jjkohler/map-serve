@@ -1,0 +1,89 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Dynamic Map App</title>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+
+    <!-- Load the ArcGIS Maps SDK for JavaScript -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.32/"></script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+
+    <script>
+      require([
+        "esri/config",
+        "esri/WebMap",
+        "esri/views/MapView",
+        "esri/geometry/Extent"
+      ], function (esriConfig, WebMap, MapView, Extent) {
+        // Helper function to parse URL parameters
+        function getUrlParams() {
+          const params = new URLSearchParams(window.location.search);
+          return {
+            apiKey: params.get("apiKey"),
+            itemId: params.get("itemId"),
+            center: params.get("center") ? params.get("center").split(",").map(Number) : [-117.81, 34.03],
+            minZoom: params.get("minZoom") ? parseInt(params.get("minZoom")) : 10,
+            maxZoom: params.get("maxZoom") ? parseInt(params.get("maxZoom")) : 13,
+            extent: params.get("extent") ? params.get("extent").split(",").map(Number) : null
+          };
+        }
+
+        // Get parameters from the URL
+        const params = getUrlParams();
+
+        // Set the API key
+        esriConfig.apiKey = params.apiKey || "YOUR_DEFAULT_API_KEY";
+
+        // Create a WebMap using the item-id
+        const webMap = new WebMap({
+          portalItem: {
+            id: params.itemId || "e5c39104355f4a749e5550bc083c1ff6" // Default item ID
+          }
+        });
+
+        // Define the extent if provided
+        const restrictedExtent = params.extent
+          ? new Extent({
+              xmin: params.extent[0],
+              ymin: params.extent[1],
+              xmax: params.extent[2],
+              ymax: params.extent[3],
+              spatialReference: { wkid: 4326 }
+            })
+          : null;
+
+        // Create the view
+        const view = new MapView({
+          container: "viewDiv",
+          map: webMap,
+          center: params.center, // Default center
+          zoom: params.minZoom, // Default zoom level
+          constraints: {
+            minZoom: params.minZoom, // Minimum zoom level
+            maxZoom: params.maxZoom, // Maximum zoom level
+            geometry: restrictedExtent, // Restrict panning to this extent
+            rotationEnabled: false // Optional: Disable map rotation
+          }
+        });
+
+        // Optional: Add a zoom control widget
+        view.ui.add("zoom", "top-left");
+      });
+    </script>
+  </body>
+</html>
