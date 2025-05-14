@@ -28,8 +28,10 @@
         "esri/config",
         "esri/WebMap",
         "esri/views/MapView",
+        "esri/widgets/ScaleBar",
+        "esri/widgets/Legend",
         "esri/geometry/Extent"
-      ], function (esriConfig, WebMap, MapView, Extent) {
+      ], function (esriConfig, WebMap, MapView, ScaleBar, Legend, Extent) {
         // Helper function to parse URL parameters
         function getUrlParams() {
           const params = new URLSearchParams(window.location.search);
@@ -81,8 +83,22 @@
           }
         });
 
-        // Optional: Add a zoom control widget
-        view.ui.add("zoom", "top-left");
+        // Add a scale bar
+        const scaleBar = new ScaleBar({
+          view: view,
+          unit: "dual" // Displays both metric and imperial units
+        });
+        view.ui.add(scaleBar, {
+          position: "bottom-left"
+        });
+
+        // Add a collapsible legend
+        const legend = new Legend({
+          view: view
+        });
+        view.ui.add(legend, {
+          position: "top-right"
+        });
       });
     </script>
   </body>
