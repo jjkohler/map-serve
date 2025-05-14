@@ -1,17 +1,62 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>Dynamic Map App</title>
+    <title>Map with Collapsible Legend Drawer</title>
 
     <style>
       html,
-      body,
-      #viewDiv {
-        padding: 0;
+      body {
         margin: 0;
+        padding: 0;
         height: 100%;
         width: 100%;
+        overflow: hidden;
+      }
+
+      #appContainer {
+        display: flex;
+        height: 100%;
+        width: 100%;
+      }
+
+      /* Left-side drawer */
+      #legendDrawer {
+        width: 300px; /* Width of the drawer */
+        background: white;
+        border-right: 1px solid #ccc;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease; /* Smooth sliding effect */
+        z-index: 10;
+      }
+
+      #legendDrawer.collapsed {
+        transform: translateX(-100%); /* Slide the drawer out of view */
+      }
+
+      #legendHeader {
+        padding: 10px;
+        background: #f4f4f4;
+        border-bottom: 1px solid #ccc;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      #legendContent {
+        padding: 10px;
+        overflow-y: auto;
+        height: calc(100% - 40px); /* Adjust height to account for the header */
+      }
+
+      /* Map container */
+      #viewDiv {
+        flex: 1;
+        transition: margin-left 0.3s ease; /* Smooth resizing effect */
+      }
+
+      #viewDiv.shifted {
+        margin-left: 300px; /* Shift the map when the drawer is open */
       }
     </style>
 
@@ -21,17 +66,26 @@
   </head>
 
   <body>
-    <div id="viewDiv"></div>
+    <div id="appContainer">
+      <!-- Left-side drawer -->
+      <div id="legendDrawer">
+        <div id="legendHeader">Legend ▼</div>
+        <div id="legendContent"></div>
+      </div>
+
+      <!-- Map container -->
+      <div id="viewDiv"></div>
+    </div>
 
     <script>
       require([
         "esri/config",
         "esri/WebMap",
         "esri/views/MapView",
-        "esri/widgets/ScaleBar",
         "esri/widgets/Legend",
+        "esri/widgets/ScaleBar",
         "esri/geometry/Extent"
-      ], function (esriConfig, WebMap, MapView, ScaleBar, Legend, Extent) {
+      ], function (esriConfig, WebMap, MapView, Legend, ScaleBar, Extent) {
         // Helper function to parse URL parameters
         function getUrlParams() {
           const params = new URLSearchParams(window.location.search);
@@ -92,12 +146,27 @@
           position: "bottom-left"
         });
 
-        // Add a collapsible legend
+        // Add the legend widget to the drawer
         const legend = new Legend({
           view: view
         });
-        view.ui.add(legend, {
-          position: "top-right"
+        legend.container = "legendContent"; // Attach the legend to the drawer
+
+        // Toggle the drawer
+        const legendDrawer = document.getElementById("legendDrawer");
+        const legendHeader = document.getElementById("legendHeader");
+        const viewDiv = document.getElementById("viewDiv");
+
+        legendHeader.addEventListener("click", function () {
+          if (legendDrawer.classList.contains("collapsed")) {
+            legendDrawer.classList.remove("collapsed");
+            viewDiv.classList.add("shifted"); // Slide the map over
+            legendHeader.textContent = "Legend ▼";
+          } else {
+            legendDrawer.classList.add("collapsed");
+            viewDiv.classList.remove("shifted"); // Expand the map
+            legendHeader.textContent = "Legend ▲";
+          }
         });
       });
     </script>
