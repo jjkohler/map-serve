@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>Map with Collapsible Legend Drawer</title>
+    <title>Map with Responsive Collapsible Legend Drawer</title>
 
     <style>
       html,
@@ -27,11 +27,13 @@
         background: white;
         border-right: 1px solid #ccc;
         box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
-        transition: transform 0.3s ease; /* Smooth sliding effect */
+        transition: transform 0.3s ease, width 0.3s ease; /* Smooth sliding effect */
         z-index: 10;
+        position: relative;
       }
 
       #legendDrawer.collapsed {
+        width: 0; /* Collapse the drawer */
         transform: translateX(-100%); /* Slide the drawer out of view */
       }
 
@@ -41,6 +43,9 @@
         border-bottom: 1px solid #ccc;
         font-weight: bold;
         cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
       }
 
       #legendContent {
@@ -52,11 +57,30 @@
       /* Map container */
       #viewDiv {
         flex: 1;
-        transition: margin-left 0.3s ease; /* Smooth resizing effect */
+        transition: flex 0.3s ease; /* Smooth resizing effect */
       }
 
-      #viewDiv.shifted {
-        margin-left: 300px; /* Shift the map when the drawer is open */
+      #viewDiv.expanded {
+        flex: 1 1 100%; /* Expand the map when the drawer is closed */
+      }
+
+      /* Toggle button for reopening the legend */
+      #toggleButton {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        transform: translate(-100%, -50%);
+        background: #f4f4f4;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        cursor: pointer;
+        display: none; /* Hidden by default */
+        z-index: 20;
+      }
+
+      #toggleButton.visible {
+        display: block; /* Show the button when the legend is collapsed */
       }
     </style>
 
@@ -69,13 +93,19 @@
     <div id="appContainer">
       <!-- Left-side drawer -->
       <div id="legendDrawer">
-        <div id="legendHeader">Legend ▼</div>
+        <div id="legendHeader">
+          Legend
+          <span id="toggleArrow">◀</span>
+        </div>
         <div id="legendContent"></div>
       </div>
 
       <!-- Map container -->
-      <div id="viewDiv"></div>
+      <div id="viewDiv" class="expanded"></div>
     </div>
+
+    <!-- Toggle button for reopening the legend -->
+    <div id="toggleButton" class="visible">▶</div>
 
     <script>
       require([
@@ -154,19 +184,30 @@
 
         // Toggle the drawer
         const legendDrawer = document.getElementById("legendDrawer");
-        const legendHeader = document.getElementById("legendHeader");
+        const toggleArrow = document.getElementById("toggleArrow");
+        const toggleButton = document.getElementById("toggleButton");
         const viewDiv = document.getElementById("viewDiv");
 
-        legendHeader.addEventListener("click", function () {
+        toggleArrow.addEventListener("click", function () {
           if (legendDrawer.classList.contains("collapsed")) {
             legendDrawer.classList.remove("collapsed");
-            viewDiv.classList.add("shifted"); // Slide the map over
-            legendHeader.textContent = "Legend ▼";
+            viewDiv.classList.remove("expanded");
+            toggleArrow.textContent = "◀";
+            toggleButton.classList.remove("visible");
           } else {
             legendDrawer.classList.add("collapsed");
-            viewDiv.classList.remove("shifted"); // Expand the map
-            legendHeader.textContent = "Legend ▲";
+            viewDiv.classList.add("expanded");
+            toggleArrow.textContent = "▶";
+            toggleButton.classList.add("visible");
           }
+        });
+
+        // Reopen the legend when the toggle button is clicked
+        toggleButton.addEventListener("click", function () {
+          legendDrawer.classList.remove("collapsed");
+          viewDiv.classList.remove("expanded");
+          toggleArrow.textContent = "◀";
+          toggleButton.classList.remove("visible");
         });
       });
     </script>
