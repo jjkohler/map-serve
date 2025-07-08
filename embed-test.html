@@ -22,6 +22,37 @@
       const code = document.getElementById('embedcode').value.trim();
       document.getElementById('embed-area').innerHTML = code;
     });
+
+    // Helper to force reload by appending a cache-busting query param
+    function getApiKeysUrl() {
+      return 'api-keys.csv?_=' + Date.now();
+    }
+
+    // Populate project names from api-keys.csv
+    function loadProjects() {
+      projectCombo.innerHTML = '';
+      fetch(getApiKeysUrl())
+        .then(r => r.ok ? r.text() : Promise.reject('Could not load api-keys.csv'))
+        .then(text => {
+          const lines = text.trim().split(/\r?\n/);
+          const headers = lines[0].split(',');
+          const clientIdx = headers.findIndex(h => h.trim().toLowerCase() === 'client');
+          if (clientIdx === -1) return;
+          for (let i = 1; i < lines.length; i++) {
+            const row = lines[i].split(',');
+            const client = row[clientIdx] ? row[clientIdx].trim() : '';
+            if (client) {
+              const item = document.createElement('calcite-combobox-item');
+              item.value = client;
+              item.textLabel = client;
+              projectCombo.appendChild(item);
+            }
+          }
+        });
+    }
+
+    // Initial load (always cache-busted)
+    loadProjects();
   </script>
 </body>
 </html>

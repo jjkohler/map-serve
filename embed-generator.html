@@ -32,25 +32,28 @@
     const output = document.getElementById('output');
     const preview = document.getElementById('preview');
 
-    // Populate project names from api-keys.csv
-    fetch('api-keys.csv')
-      .then(r => r.ok ? r.text() : Promise.reject('Could not load api-keys.csv'))
-      .then(text => {
-        const lines = text.trim().split(/\r?\n/);
-        const headers = lines[0].split(',');
-        const clientIdx = headers.findIndex(h => h.trim().toLowerCase() === 'client');
-        if (clientIdx === -1) return;
-        for (let i = 1; i < lines.length; i++) {
-          const row = lines[i].split(',');
-          const client = row[clientIdx] ? row[clientIdx].trim() : '';
-          if (client) {
-            const item = document.createElement('calcite-combobox-item');
-            item.value = client;
-            item.textLabel = client;
-            projectCombo.appendChild(item);
+    // Populate project names from api-keys.csv (always cache-busted)
+    function loadProjects() {
+      projectCombo.innerHTML = '';
+      fetch('api-keys.csv?_=' + Date.now())
+        .then(r => r.ok ? r.text() : Promise.reject('Could not load api-keys.csv'))
+        .then(text => {
+          const lines = text.trim().split(/\r?\n/);
+          const headers = lines[0].split(',');
+          const clientIdx = headers.findIndex(h => h.trim().toLowerCase() === 'client');
+          if (clientIdx === -1) return;
+          for (let i = 1; i < lines.length; i++) {
+            const row = lines[i].split(',');
+            const client = row[clientIdx] ? row[clientIdx].trim() : '';
+            if (client) {
+              const item = document.createElement('calcite-combobox-item');
+              item.value = client;
+              item.textLabel = client;
+              projectCombo.appendChild(item);
+            }
           }
-        }
-      });
+        });
+    }
 
     document.getElementById('generate').addEventListener('click', () => {
       let project = projectCombo.value.trim();
@@ -84,6 +87,9 @@
         setTimeout(() => { btn.textContent = orig; }, 1200);
       });
     });
+
+    // Initial load (always cache-busted)
+    loadProjects();
   </script>
 </body>
 </html>
