@@ -96,7 +96,6 @@
           const params = new URLSearchParams(window.location.search);
           return {
             project: params.get("project"),
-            itemId: params.get("itemId"),
             // Only include these if present in the URL
             center: params.get("center") ? params.get("center").split(",").map(Number) : undefined,
             minZoom: params.get("minZoom") ? parseInt(params.get("minZoom")) : undefined,
@@ -108,8 +107,8 @@
         // Get parameters from the URL
         const params = getUrlParams();
 
-        // Function to fetch and parse CSV
-        function fetchApiKey(project) {
+        // Function to fetch and parse CSV and return both API key and itemId
+        function fetchProjectInfo(project) {
           return fetch('api-keys.csv')
             .then(response => {
               if (!response.ok) throw new Error('Could not load api-keys.csv');
@@ -123,217 +122,215 @@
                 const rowObj = {};
                 headers.forEach((h, idx) => rowObj[h.trim()] = row[idx] ? row[idx].trim() : '');
                 if (rowObj['Client'] && rowObj['Client'].toLowerCase() === project.toLowerCase()) {
-                  return rowObj['API Key'];
+                  return { apiKey: rowObj['API Key'], itemId: rowObj['Map ItemId'] };
                 }
               }
               throw new Error('Project not found in api-keys.csv');
             });
         }
 
-        // Main logic: fetch API key, then initialize map
-        fetchApiKey(params.project || '').then(apiKey => {
-          esriConfig.apiKey = apiKey;
-
-          // Require an itemId to be provided
-          if (!params.itemId) {
-            alert('A WebMap itemId must be provided in the URL. Example: ?project=YOURPROJECT&itemId=YOURITEMID');
-            return;
-          }
-
-          // Create a WebMap using the item-id
-          const webMap = new WebMap({
-            portalItem: {
-              id: params.itemId
+        // Main logic: fetch API key and itemId, then initialize map
+        if (!params.project) {
+          alert('A project name must be provided in the URL. Example: ?project=YOURPROJECT');
+        } else {
+          fetchProjectInfo(params.project).then(({ apiKey, itemId }) => {
+            esriConfig.apiKey = apiKey;
+            if (!itemId) {
+              alert('No itemId found for this project in api-keys.csv.');
+              return;
             }
-          });
+            // Create a WebMap using the item-id
+            const webMap = new WebMap({
+              portalItem: { id: itemId }
+            });
 
-          // Create the view (center/zoom will be set after map loads if not provided)
-          const view = new MapView({
-            container: "viewDiv",
-            map: webMap,
-            constraints: {
-              rotationEnabled: false // Optional: Disable map rotation
-            }
-          });
-
-          // After the web map loads, set min/max zoom based on the default zoom
-          webMap.when().then(() => {
-            view.when(() => {
-              // Only override min/max zoom if provided in URL
-              if (typeof params.minZoom === 'number') view.constraints.minZoom = params.minZoom;
-              else view.constraints.minZoom = view.zoom - 2;
-              if (typeof params.maxZoom === 'number') view.constraints.maxZoom = params.maxZoom;
-              else view.constraints.maxZoom = view.zoom + 4;
-              // Only set extent if provided
-              if (params.extent) {
-                const minZoomExtent = new Extent({
-                  xmin: params.extent[0],
-                  ymin: params.extent[1],
-                  xmax: params.extent[2],
-                  ymax: params.extent[3],
-                  spatialReference: { wkid: 4326 }
-                });
-                view.constraints.geometry = minZoomExtent;
-              } else {
-                // Default: restrict panning to minZoom extent
-                const originalZoom = view.zoom;
-                view.goTo({ zoom: view.constraints.minZoom }, { animate: false }).then(() => {
-                  const minZoomExtent = view.extent.clone();
-                  view.constraints.geometry = minZoomExtent;
-                  return view.goTo({ zoom: originalZoom }, { animate: false });
-                });
+            // Create the view (center/zoom will be set after map loads if not provided)
+            const view = new MapView({
+              container: "viewDiv",
+              map: webMap,
+              constraints: {
+                rotationEnabled: false // Optional: Disable map rotation
               }
             });
-          });
 
-          // Bind the map view to the scale bar web component
-          const webScaleBar = document.getElementById("webScaleBar");
-          view.when().then(() => {
-            webScaleBar.setAttribute("unit", "imperial");
-            webScaleBar.setAttribute("bar-style", "ruler");
-            webScaleBar.view = view;
-          });
-          // Move the scale bar to the bottom-left in the map UI
-          view.ui.add(webScaleBar, "bottom-left");
+            // After the web map loads, set min/max zoom based on the default zoom
+            webMap.when().then(() => {
+              view.when(() => {
+                // Only override min/max zoom if provided in URL
+                if (typeof params.minZoom === 'number') view.constraints.minZoom = params.minZoom;
+                else view.constraints.minZoom = view.zoom - 2;
+                if (typeof params.maxZoom === 'number') view.constraints.maxZoom = params.maxZoom;
+                else view.constraints.maxZoom = view.zoom + 4;
+                // Only set extent if provided
+                if (params.extent) {
+                  const minZoomExtent = new Extent({
+                    xmin: params.extent[0],
+                    ymin: params.extent[1],
+                    xmax: params.extent[2],
+                    ymax: params.extent[3],
+                    spatialReference: { wkid: 4326 }
+                  });
+                  view.constraints.geometry = minZoomExtent;
+                } else {
+                  // Default: restrict panning to minZoom extent
+                  const originalZoom = view.zoom;
+                  view.goTo({ zoom: view.constraints.minZoom }, { animate: false }).then(() => {
+                    const minZoomExtent = view.extent.clone();
+                    view.constraints.geometry = minZoomExtent;
+                    return view.goTo({ zoom: originalZoom }, { animate: false });
+                  });
+                }
+              });
+            });
 
-          // Add a Calcite home button to return to default zoom/center
-          let defaultCenter, defaultZoom;
-          view.when(() => {
-            defaultCenter = view.center.clone();
-            defaultZoom = view.zoom;
-          });
+            // Bind the map view to the scale bar web component
+            const webScaleBar = document.getElementById("webScaleBar");
+            view.when().then(() => {
+              webScaleBar.setAttribute("unit", "imperial");
+              webScaleBar.setAttribute("bar-style", "ruler");
+              webScaleBar.view = view;
+            });
+            // Move the scale bar to the bottom-left in the map UI
+            view.ui.add(webScaleBar, "bottom-left");
 
-          // Create the Calcite home button
-          const homeButton = document.createElement("calcite-action");
-          homeButton.setAttribute("icon", "home");
-          homeButton.setAttribute("scale", "s");
-          homeButton.setAttribute("text", "Home");
-          homeButton.style.margin = "0";
-          homeButton.style.marginBottom = "8px";
-          homeButton.style.boxShadow = "0 2px 6px rgba(0,0,0,0.15)";
-          homeButton.style.borderRadius = "6px";
-          homeButton.style.background = "white";
-          homeButton.addEventListener("click", () => {
-            if (defaultCenter && defaultZoom) {
-              view.goTo({ center: defaultCenter, zoom: defaultZoom });
-            }
-          });
+            // Add a Calcite home button to return to default zoom/center
+            let defaultCenter, defaultZoom;
+            view.when(() => {
+              defaultCenter = view.center.clone();
+              defaultZoom = view.zoom;
+            });
 
-          // Create the Calcite fullscreen button
-          const fullscreenButton = document.createElement("calcite-action");
-          fullscreenButton.setAttribute("icon", "full-screen");
-          fullscreenButton.setAttribute("scale", "s");
-          fullscreenButton.setAttribute("text", "Full Screen");
-          fullscreenButton.style.margin = "0";
-          fullscreenButton.style.marginBottom = "8px";
-          fullscreenButton.style.boxShadow = "0 2px 6px rgba(0,0,0,0.15)";
-          fullscreenButton.style.borderRadius = "6px";
-          fullscreenButton.style.background = "white";
-          fullscreenButton.addEventListener("click", () => {
-            const elem = document.getElementById("appContainer");
-            if (!document.fullscreenElement) {
-              if (elem.requestFullscreen) {
-                elem.requestFullscreen();
-              } else if (elem.webkitRequestFullscreen) {
-                elem.webkitRequestFullscreen();
-              } else if (elem.msRequestFullscreen) {
-                elem.msRequestFullscreen();
+            // Create the Calcite home button
+            const homeButton = document.createElement("calcite-action");
+            homeButton.setAttribute("icon", "home");
+            homeButton.setAttribute("scale", "s");
+            homeButton.setAttribute("text", "Home");
+            homeButton.style.margin = "0";
+            homeButton.style.marginBottom = "8px";
+            homeButton.style.boxShadow = "0 2px 6px rgba(0,0,0,0.15)";
+            homeButton.style.borderRadius = "6px";
+            homeButton.style.background = "white";
+            homeButton.addEventListener("click", () => {
+              if (defaultCenter && defaultZoom) {
+                view.goTo({ center: defaultCenter, zoom: defaultZoom });
               }
-            } else {
-              if (document.exitFullscreen) {
-                document.exitFullscreen();
-              } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-              } else if (document.msExitFullscreen) {
-                document.msExitFullscreen();
+            });
+
+            // Create the Calcite fullscreen button
+            const fullscreenButton = document.createElement("calcite-action");
+            fullscreenButton.setAttribute("icon", "full-screen");
+            fullscreenButton.setAttribute("scale", "s");
+            fullscreenButton.setAttribute("text", "Full Screen");
+            fullscreenButton.style.margin = "0";
+            fullscreenButton.style.marginBottom = "8px";
+            fullscreenButton.style.boxShadow = "0 2px 6px rgba(0,0,0,0.15)";
+            fullscreenButton.style.borderRadius = "6px";
+            fullscreenButton.style.background = "white";
+            fullscreenButton.addEventListener("click", () => {
+              const elem = document.getElementById("appContainer");
+              if (!document.fullscreenElement) {
+                if (elem.requestFullscreen) {
+                  elem.requestFullscreen();
+                } else if (elem.webkitRequestFullscreen) {
+                  elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) {
+                  elem.msRequestFullscreen();
+                }
+              } else {
+                if (document.exitFullscreen) {
+                  document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                  document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                  document.msExitFullscreen();
+                }
               }
+            });
+
+            // Listen for fullscreen change to update the icon
+            document.addEventListener("fullscreenchange", () => {
+              if (document.fullscreenElement) {
+                fullscreenButton.setAttribute("icon", "full-screen-exit");
+                fullscreenButton.setAttribute("text", "Exit Full Screen");
+              } else {
+                fullscreenButton.setAttribute("icon", "full-screen");
+                fullscreenButton.setAttribute("text", "Full Screen");
+              }
+            });
+
+            // Move the zoom controls to the bottom-right
+            view.ui.move(["zoom"], "bottom-right");
+
+            // Add the home button and fullscreen button directly into the zoom widget's container for vertical stacking
+            view.when(() => {
+              const zoomWidget = view.ui.find("zoom");
+              if (zoomWidget && zoomWidget.container) {
+                // Make the zoom widget container background transparent
+                zoomWidget.container.style.background = "none";
+                zoomWidget.container.style.boxShadow = "none";
+                zoomWidget.container.style.border = "none";
+                zoomWidget.container.style.backdropFilter = "none";
+                // Insert fullscreen button at the top, then home button, then zoom buttons
+                zoomWidget.container.insertBefore(fullscreenButton, zoomWidget.container.firstChild);
+                zoomWidget.container.insertBefore(homeButton, zoomWidget.container.children[1]);
+              } else {
+                // Fallback: add to bottom-right if zoom widget not found
+                view.ui.add(fullscreenButton, { position: "bottom-right", index: 0 });
+                view.ui.add(homeButton, { position: "bottom-right", index: 1 });
+              }
+            });
+
+            // --- Legend panel and expand button alignment ---
+            // Use a fixed position for the legend panel relative to the top left corner
+            function alignLegendPanel() {
+              legendPanel.style.top = "16px";
+              legendPanel.style.left = "16px";
             }
-          });
-
-          // Listen for fullscreen change to update the icon
-          document.addEventListener("fullscreenchange", () => {
-            if (document.fullscreenElement) {
-              fullscreenButton.setAttribute("icon", "full-screen-exit");
-              fullscreenButton.setAttribute("text", "Exit Full Screen");
-            } else {
-              fullscreenButton.setAttribute("icon", "full-screen");
-              fullscreenButton.setAttribute("text", "Full Screen");
-            }
-          });
-
-          // Move the zoom controls to the bottom-right
-          view.ui.move(["zoom"], "bottom-right");
-
-          // Add the home button and fullscreen button directly into the zoom widget's container for vertical stacking
-          view.when(() => {
-            const zoomWidget = view.ui.find("zoom");
-            if (zoomWidget && zoomWidget.container) {
-              // Make the zoom widget container background transparent
-              zoomWidget.container.style.background = "none";
-              zoomWidget.container.style.boxShadow = "none";
-              zoomWidget.container.style.border = "none";
-              zoomWidget.container.style.backdropFilter = "none";
-              // Insert fullscreen button at the top, then home button, then zoom buttons
-              zoomWidget.container.insertBefore(fullscreenButton, zoomWidget.container.firstChild);
-              zoomWidget.container.insertBefore(homeButton, zoomWidget.container.children[1]);
-            } else {
-              // Fallback: add to bottom-right if zoom widget not found
-              view.ui.add(fullscreenButton, { position: "bottom-right", index: 0 });
-              view.ui.add(homeButton, { position: "bottom-right", index: 1 });
-            }
-          });
-
-          // --- Legend panel and expand button alignment ---
-          // Use a fixed position for the legend panel relative to the top left corner
-          function alignLegendPanel() {
-            legendPanel.style.top = "16px";
-            legendPanel.style.left = "16px";
-          }
-          // When the legend is collapsed, show the expand button
-          expandLegend.addEventListener("click", function () {
+            // When the legend is collapsed, show the expand button
+            expandLegend.addEventListener("click", function () {
+              alignLegendPanel();
+              legendPanel.hidden = false;
+              expandLegend.style.display = "none";
+            });
+            // When the legend is closed, show the expand button
+            collapseLegend.addEventListener("click", function () {
+              alignLegendPanel();
+              legendPanel.hidden = true;
+              expandLegend.style.display = "block";
+            });
+            // Initial alignment
             alignLegendPanel();
-            legendPanel.hidden = false;
-            expandLegend.style.display = "none";
-          });
-          // When the legend is closed, show the expand button
-          collapseLegend.addEventListener("click", function () {
-            alignLegendPanel();
-            legendPanel.hidden = true;
-            expandLegend.style.display = "block";
-          });
-          // Initial alignment
-          alignLegendPanel();
-          // Keep alignment on window resize (optional, but harmless)
-          window.addEventListener("resize", alignLegendPanel);
+            // Keep alignment on window resize (optional, but harmless)
+            window.addEventListener("resize", alignLegendPanel);
 
-          // Add the legend widget to the drawer
-          const legend = new Legend({
-            view: view
-          });
-          legend.container = "legendContent"; // Attach the legend to the drawer
+            // Add the legend widget to the drawer
+            const legend = new Legend({
+              view: view
+            });
+            legend.container = "legendContent"; // Attach the legend to the drawer
 
-          // Remove old legend drawer/toggle logic and use Calcite actions
-          // (collapseLegend, expandLegend already declared above)
-          collapseLegend.addEventListener("click", function () {
-            legendPanel.hidden = true;
-            expandLegend.style.display = "block";
-            expandLegend.focus();
-          });
-          expandLegend.addEventListener("click", function () {
-            legendPanel.hidden = false;
-            expandLegend.style.display = "none";
-          });
+            // Remove old legend drawer/toggle logic and use Calcite actions
+            // (collapseLegend, expandLegend already declared above)
+            collapseLegend.addEventListener("click", function () {
+              legendPanel.hidden = true;
+              expandLegend.style.display = "block";
+              expandLegend.focus();
+            });
+            expandLegend.addEventListener("click", function () {
+              legendPanel.hidden = false;
+              expandLegend.style.display = "none";
+            });
 
-          // Remove previous manual positioning for expandLegend
-          // Add expandLegend to the map's UI for perfect alignment
-          view.ui.add(expandLegend, "top-left");
-          // Place the legend panel inside the map view container for proper stacking
-          const viewDiv = document.getElementById("viewDiv");
-          viewDiv.appendChild(legendPanel);
-        }).catch(err => {
-          alert('Error loading API key for client: ' + err.message);
-        });
-      });
+            // Remove previous manual positioning for expandLegend
+            // Add expandLegend to the map's UI for perfect alignment
+            view.ui.add(expandLegend, "top-left");
+            // Place the legend panel inside the map view container for proper stacking
+            const viewDiv = document.getElementById("viewDiv");
+            viewDiv.appendChild(legendPanel);
+          }).catch(err => {
+            alert('Error loading project info: ' + err.message);
+          });
+        }
     </script>
   </body>
 </html>

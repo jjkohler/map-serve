@@ -22,10 +22,6 @@
       <label for="project">Project Name</label>
       <calcite-input id="project" placeholder="e.g. Manchester" clearable></calcite-input>
     </div>
-    <div class="form-row">
-      <label for="itemid">Map Item ID</label>
-      <calcite-input id="itemid" placeholder="e.g. 688a64eaa26e45189f50d02085c36b86" clearable></calcite-input>
-    </div>
     <calcite-button id="generate" width="full" appearance="solid" scale="m">Generate Embed Code</calcite-button>
     <calcite-button id="copy" width="full" appearance="outline" scale="m" style="margin-top:0.5em;display:none;">Copy Code</calcite-button>
     <div class="output-area" id="output" style="display:none;"></div>
@@ -33,29 +29,25 @@
   </div>
   <script type="module">
     const projectInput = document.getElementById('project');
-    const itemidInput = document.getElementById('itemid');
     const output = document.getElementById('output');
     const preview = document.getElementById('preview');
     document.getElementById('generate').addEventListener('click', () => {
-      const itemId = itemidInput.value.trim();
-      if (!itemId) {
+      const project = projectInput.value.trim();
+      if (!project) {
         output.style.display = 'block';
-        output.textContent = 'Please enter a Map Item ID.';
+        output.textContent = 'Please enter a Project Name.';
         preview.style.display = 'none';
         preview.innerHTML = '';
         document.getElementById('copy').style.display = 'none';
         return;
       }
-      const project = projectInput.value.trim();
-      let attrs = `item-id="${itemId}"`;
-      if (project) attrs += ` data-project="${project}"`;
       const embedCode =
-`<iframe src="map.html?project=${encodeURIComponent(project)}&itemId=${encodeURIComponent(itemId)}" style="width:700px;height:600px;border:none;" allowfullscreen></iframe>`;
+`<iframe src="map.html?project=${encodeURIComponent(project)}" style="width:700px;height:600px;border:none;" allowfullscreen></iframe>`;
       output.style.display = 'block';
       output.textContent = embedCode;
       // Show live preview
       preview.style.display = 'block';
-      preview.innerHTML = `<iframe src="map.html?project=${encodeURIComponent(project)}&itemId=${encodeURIComponent(itemId)}" style="width:100%;height:400px;margin-top:1em;border:none;" allowfullscreen></iframe>`;
+      preview.innerHTML = `<iframe src="map.html?project=${encodeURIComponent(project)}" style="width:100%;height:400px;margin-top:1em;border:none;" allowfullscreen></iframe>`;
       document.getElementById('copy').style.display = 'inline-block';
     });
     document.getElementById('copy').addEventListener('click', () => {
