@@ -134,10 +134,16 @@
         fetchApiKey(params.project || '').then(apiKey => {
           esriConfig.apiKey = apiKey;
 
+          // Require an itemId to be provided
+          if (!params.itemId) {
+            alert('A WebMap itemId must be provided in the URL. Example: ?project=YOURPROJECT&itemId=YOURITEMID');
+            return;
+          }
+
           // Create a WebMap using the item-id
           const webMap = new WebMap({
             portalItem: {
-              id: params.itemId || "e5c39104355f4a749e5550bc083c1ff6" // Default item ID
+              id: params.itemId
             }
           });
 
