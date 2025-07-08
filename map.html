@@ -164,8 +164,8 @@
           webMap.when().then(() => {
             view.when(() => {
               const defaultZoom = view.zoom;
-              view.constraints.minZoom = defaultZoom - 1;
-              view.constraints.maxZoom = defaultZoom + 1;
+              view.constraints.minZoom = defaultZoom - 2;
+              view.constraints.maxZoom = defaultZoom + 2;
             });
           });
 
