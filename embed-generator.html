@@ -20,7 +20,7 @@
     <h2>ArcGIS Embedded Map Code Generator</h2>
     <div class="form-row">
       <label for="project">Project Name</label>
-      <calcite-input id="project" placeholder="e.g. Manchester" clearable></calcite-input>
+      <calcite-combobox id="project" placeholder="Select or type project name" clearable selection-mode="single"></calcite-combobox>
     </div>
     <calcite-button id="generate" width="full" appearance="solid" scale="m">Generate Embed Code</calcite-button>
     <calcite-button id="copy" width="full" appearance="outline" scale="m" style="margin-top:0.5em;display:none;">Copy Code</calcite-button>
@@ -28,14 +28,35 @@
     <div id="preview" style="display:none;"></div>
   </div>
   <script type="module">
-    const projectInput = document.getElementById('project');
+    const projectCombo = document.getElementById('project');
     const output = document.getElementById('output');
     const preview = document.getElementById('preview');
+
+    // Populate project names from api-keys.csv
+    fetch('api-keys.csv')
+      .then(r => r.ok ? r.text() : Promise.reject('Could not load api-keys.csv'))
+      .then(text => {
+        const lines = text.trim().split(/\r?\n/);
+        const headers = lines[0].split(',');
+        const clientIdx = headers.findIndex(h => h.trim().toLowerCase() === 'client');
+        if (clientIdx === -1) return;
+        for (let i = 1; i < lines.length; i++) {
+          const row = lines[i].split(',');
+          const client = row[clientIdx] ? row[clientIdx].trim() : '';
+          if (client) {
+            const item = document.createElement('calcite-combobox-item');
+            item.value = client;
+            item.textLabel = client;
+            projectCombo.appendChild(item);
+          }
+        }
+      });
+
     document.getElementById('generate').addEventListener('click', () => {
-      const project = projectInput.value.trim();
+      let project = projectCombo.value.trim();
       if (!project) {
         output.style.display = 'block';
-        output.textContent = 'Please enter a Project Name.';
+        output.textContent = 'Please enter or select a Project Name.';
         preview.style.display = 'none';
         preview.innerHTML = '';
         document.getElementById('copy').style.display = 'none';
