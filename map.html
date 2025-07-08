@@ -189,6 +189,8 @@
           // Bind the map view to the scale bar web component
           const webScaleBar = document.getElementById("webScaleBar");
           view.when().then(() => {
+            webScaleBar.setAttribute("units", "imperial");
+            webScaleBar.setAttribute("type", "ruler");
             webScaleBar.view = view;
           });
           // Move the scale bar to the bottom-left in the map UI
