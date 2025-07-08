@@ -166,11 +166,11 @@
               const defaultZoom = view.zoom;
               view.constraints.minZoom = defaultZoom - 2;
               view.constraints.maxZoom = defaultZoom + 4;
-              // Hide the map for seamless constraint setup
-              const viewDiv = document.getElementById("viewDiv");
-              viewDiv.style.visibility = "hidden";
+              // Wait for initial render, then hide map for constraint setup
               setTimeout(() => {
+                const viewDiv = document.getElementById("viewDiv");
                 const originalZoom = view.zoom;
+                viewDiv.style.visibility = "hidden";
                 view.zoom = view.constraints.minZoom;
                 view.whenOnce('extent').then(() => {
                   setTimeout(() => {
