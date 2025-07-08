@@ -186,6 +186,30 @@
           // Move the scale bar to the bottom-left in the map UI
           view.ui.add(webScaleBar, "bottom-left");
 
+          // Move the zoom controls to the bottom-right
+          view.ui.move(["zoom"], "bottom-right");
+
+          // Add a Calcite home button to return to default zoom/center
+          let defaultCenter, defaultZoom;
+          view.when(() => {
+            defaultCenter = view.center.clone();
+            defaultZoom = view.zoom;
+          });
+
+          // Create the Calcite home button
+          const homeButton = document.createElement("calcite-action");
+          homeButton.setAttribute("icon", "home");
+          homeButton.setAttribute("scale", "s");
+          homeButton.setAttribute("text", "Home");
+          homeButton.style.margin = "8px";
+          homeButton.addEventListener("click", () => {
+            if (defaultCenter && defaultZoom) {
+              view.goTo({ center: defaultCenter, zoom: defaultZoom });
+            }
+          });
+          // Add the home button to the bottom-right
+          view.ui.add(homeButton, "bottom-right");
+
           // Add the legend widget to the drawer
           const legend = new Legend({
             view: view
