@@ -309,7 +309,6 @@
             });
             legend.container = "legendContent"; // Attach the legend to the drawer
 
-            // Remove old legend drawer/toggle logic and use Calcite actions
             // (collapseLegend, expandLegend already declared above)
             collapseLegend.addEventListener("click", function () {
               legendPanel.hidden = true;
@@ -321,7 +320,6 @@
               expandLegend.style.display = "none";
             });
 
-            // Remove previous manual positioning for expandLegend
             // Add expandLegend to the map's UI for perfect alignment
             view.ui.add(expandLegend, "top-left");
             // Place the legend panel inside the map view container for proper stacking
