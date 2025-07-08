@@ -74,7 +74,9 @@
       <!-- Map container -->
       <div id="viewDiv" style="flex:1;"></div>
     </div>
-    <calcite-fab id="expandLegend" icon="chevron-right" text="Show Legend" style="position:absolute;top:50%;left:0;transform:translate(-50%,-50%);display:none;z-index:100;background:var(--calcite-ui-blue-1);"></calcite-fab>
+    <div id="expandLegendContainer" style="position:absolute;top:50%;left:0;transform:translateY(-50%);z-index:100;display:none;">
+      <calcite-button id="expandLegend" appearance="solid" color="blue" scale="l" icon-start="chevron-right" style="writing-mode:vertical-lr;">Show Legend</calcite-button>
+    </div>
 
     <script>
       require([
@@ -199,14 +201,15 @@
           const legendPanel = document.getElementById("legendPanel");
           const collapseLegend = document.getElementById("collapseLegend");
           const expandLegend = document.getElementById("expandLegend");
+          const expandLegendContainer = document.getElementById("expandLegendContainer");
           collapseLegend.addEventListener("click", function () {
             legendPanel.hidden = true;
-            expandLegend.style.display = "block";
+            expandLegendContainer.style.display = "block";
             expandLegend.focus();
           });
           expandLegend.addEventListener("click", function () {
             legendPanel.hidden = false;
-            expandLegend.style.display = "none";
+            expandLegendContainer.style.display = "none";
           });
         }).catch(err => {
           alert('Error loading API key for client: ' + err.message);
