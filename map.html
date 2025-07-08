@@ -67,16 +67,15 @@
       <calcite-panel id="legendPanel" width-scale="m" style="min-width:220px;max-width:350px;">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:0 1rem 0 0.5rem;">
           <span style="font-weight:bold;font-size:1.1em;">Legend</span>
-          <calcite-action id="collapseLegend" icon="chevron-left" text="Collapse Legend" scale="m"></calcite-action>
+          <calcite-action id="collapseLegend" icon="legend" text="Collapse Legend" scale="m"></calcite-action>
         </div>
         <div id="legendContent"></div>
       </calcite-panel>
       <!-- Map container -->
-      <div id="viewDiv" style="flex:1;"></div>
+      <div id="viewDiv" style="flex:1;position:relative;"></div>
     </div>
-    <div id="expandLegendContainer" style="position:absolute;top:50%;left:0;transform:translateY(-50%);z-index:100;display:none;">
-      <calcite-button id="expandLegend" appearance="solid" color="blue" scale="l" icon-start="chevron-right" style="writing-mode:vertical-lr;">Show Legend</calcite-button>
-    </div>
+    <!-- Legend expand button, styled like a map widget -->
+    <calcite-action id="expandLegend" icon="legend" text="Show Legend" scale="l" style="position:absolute;top:90px;left:16px;z-index:100;display:none;background:white;border-radius:4px;box-shadow:0 2px 6px rgba(0,0,0,0.15);"></calcite-action>
 
     <script>
       require([
@@ -201,16 +200,19 @@
           const legendPanel = document.getElementById("legendPanel");
           const collapseLegend = document.getElementById("collapseLegend");
           const expandLegend = document.getElementById("expandLegend");
-          const expandLegendContainer = document.getElementById("expandLegendContainer");
           collapseLegend.addEventListener("click", function () {
             legendPanel.hidden = true;
-            expandLegendContainer.style.display = "block";
+            expandLegend.style.display = "block";
             expandLegend.focus();
           });
           expandLegend.addEventListener("click", function () {
             legendPanel.hidden = false;
-            expandLegendContainer.style.display = "none";
+            expandLegend.style.display = "none";
           });
+
+          // Place the expand button inside the map view container for proper stacking
+          const viewDiv = document.getElementById("viewDiv");
+          viewDiv.appendChild(expandLegend);
         }).catch(err => {
           alert('Error loading API key for client: ' + err.message);
         });
