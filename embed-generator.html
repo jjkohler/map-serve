@@ -62,13 +62,16 @@
         document.getElementById('copy').style.display = 'none';
         return;
       }
+      // Use fixed base URL for embed code
+      const baseUrl = 'https://jjkohler.github.io/map-serve/map.html';
+      const embedUrl = `${baseUrl}?project=${encodeURIComponent(project)}`;
       const embedCode =
-`<iframe src="map.html?project=${encodeURIComponent(project)}" style="width:700px;height:600px;border:none;" allowfullscreen></iframe>`;
+`<iframe src="${embedUrl}" style="width:700px;height:600px;border:none;" allowfullscreen></iframe>`;
       output.style.display = 'block';
       output.textContent = embedCode;
       // Show live preview
       preview.style.display = 'block';
-      preview.innerHTML = `<iframe src="map.html?project=${encodeURIComponent(project)}" style="width:100%;height:400px;margin-top:1em;border:none;" allowfullscreen></iframe>`;
+      preview.innerHTML = `<iframe src="${embedUrl}" style="width:100%;height:400px;margin-top:1em;border:none;" allowfullscreen></iframe>`;
       document.getElementById('copy').style.display = 'inline-block';
     });
     document.getElementById('copy').addEventListener('click', () => {
