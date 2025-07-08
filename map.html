@@ -210,7 +210,7 @@
 
           // Create the Calcite fullscreen button
           const fullscreenButton = document.createElement("calcite-action");
-          fullscreenButton.setAttribute("icon", "maximize");
+          fullscreenButton.setAttribute("icon", "full-screen");
           fullscreenButton.setAttribute("scale", "s");
           fullscreenButton.setAttribute("text", "Full Screen");
           fullscreenButton.style.margin = "0";
@@ -236,6 +236,17 @@
               } else if (document.msExitFullscreen) {
                 document.msExitFullscreen();
               }
+            }
+          });
+
+          // Listen for fullscreen change to update the icon
+          document.addEventListener("fullscreenchange", () => {
+            if (document.fullscreenElement) {
+              fullscreenButton.setAttribute("icon", "full-screen-exit");
+              fullscreenButton.setAttribute("text", "Exit Full Screen");
+            } else {
+              fullscreenButton.setAttribute("icon", "full-screen");
+              fullscreenButton.setAttribute("text", "Full Screen");
             }
           });
 
