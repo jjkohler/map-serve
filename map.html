@@ -164,8 +164,8 @@
           webMap.when().then(() => {
             view.when(() => {
               const defaultZoom = view.zoom;
-              view.constraints.minZoom = defaultZoom - 3;
-              view.constraints.maxZoom = defaultZoom + 3;
+              view.constraints.minZoom = defaultZoom - 2;
+              view.constraints.maxZoom = defaultZoom + 4;
               // Restrict panning to the extent visible at minZoom
               const originalZoom = view.zoom;
               view.zoom = view.constraints.minZoom;
