@@ -166,24 +166,13 @@
               const defaultZoom = view.zoom;
               view.constraints.minZoom = defaultZoom - 2;
               view.constraints.maxZoom = defaultZoom + 4;
-              // Wait for initial render, then hide map for constraint setup
-              setTimeout(() => {
-                const viewDiv = document.getElementById("viewDiv");
-                const originalZoom = view.zoom;
-                viewDiv.style.visibility = "hidden";
-                view.zoom = view.constraints.minZoom;
-                view.whenOnce('extent').then(() => {
-                  setTimeout(() => {
-                    const minZoomExtent = view.extent.clone();
-                    view.constraints.geometry = minZoomExtent;
-                    view.zoom = originalZoom;
-                    // Show the map again
-                    setTimeout(() => {
-                      viewDiv.style.visibility = "visible";
-                    }, 200);
-                  }, 300);
-                });
-              }, 500);
+              // Seamlessly set panning constraint at minZoom
+              const originalZoom = view.zoom;
+              view.goTo({ zoom: view.constraints.minZoom }, { animate: false }).then(() => {
+                const minZoomExtent = view.extent.clone();
+                view.constraints.geometry = minZoomExtent;
+                return view.goTo({ zoom: originalZoom }, { animate: false });
+              });
             });
           });
 
