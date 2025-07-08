@@ -120,7 +120,7 @@
         function getUrlParams() {
           const params = new URLSearchParams(window.location.search);
           return {
-            apiKey: params.get("apiKey"),
+            project: params.get("project"),
             itemId: params.get("itemId"),
             center: params.get("center") ? params.get("center").split(",").map(Number) : [-117.81, 34.03],
             minZoom: params.get("minZoom") ? parseInt(params.get("minZoom")) : 10,
@@ -132,82 +132,129 @@
         // Get parameters from the URL
         const params = getUrlParams();
 
-        // Set the API key
-        esriConfig.apiKey = params.apiKey || "YOUR_DEFAULT_API_KEY";
-
-        // Create a WebMap using the item-id
-        const webMap = new WebMap({
-          portalItem: {
-            id: params.itemId || "e5c39104355f4a749e5550bc083c1ff6" // Default item ID
-          }
-        });
-
-        // Define the extent if provided
-        const restrictedExtent = params.extent
-          ? new Extent({
-              xmin: params.extent[0],
-              ymin: params.extent[1],
-              xmax: params.extent[2],
-              ymax: params.extent[3],
-              spatialReference: { wkid: 4326 }
+        // Function to fetch and parse CSV
+        function fetchApiKey(project) {
+          return fetch('api-keys.csv')
+            .then(response => {
+              if (!response.ok) throw new Error('Could not load api-keys.csv');
+              return response.text();
             })
-          : null;
+            .then(text => {
+              const lines = text.trim().split(/\r?\n/);
+              const headers = lines[0].split(',');
+              for (let i = 1; i < lines.length; i++) {
+                const row = lines[i].split(',');
+                const rowObj = {};
+                headers.forEach((h, idx) => rowObj[h.trim()] = row[idx] ? row[idx].trim() : '');
+                if (rowObj['Client'] && rowObj['Client'].toLowerCase() === project.toLowerCase()) {
+                  return rowObj['API Key'];
+                }
+              }
+              throw new Error('Project not found in api-keys.csv');
+            });
+        }
 
-        // Create the view
-        const view = new MapView({
-          container: "viewDiv",
-          map: webMap,
-          center: params.center, // Default center
-          zoom: params.minZoom, // Default zoom level
-          constraints: {
-            minZoom: params.minZoom, // Minimum zoom level
-            maxZoom: params.maxZoom, // Maximum zoom level
-            geometry: restrictedExtent, // Restrict panning to this extent
-            rotationEnabled: false // Optional: Disable map rotation
-          }
-        });
+        // Main logic: fetch API key, then initialize map
+        fetchApiKey(params.project || '').then(apiKey => {
+          esriConfig.apiKey = apiKey;
 
-        // Add a scale bar
-        const scaleBar = new ScaleBar({
-          view: view,
-          unit: "dual" // Displays both metric and imperial units
-        });
-        view.ui.add(scaleBar, {
-          position: "bottom-left"
-        });
+          // Create a WebMap using the item-id
+          const webMap = new WebMap({
+            portalItem: {
+              id: params.itemId || "e5c39104355f4a749e5550bc083c1ff6" // Default item ID
+            }
+          });
 
-        // Add the legend widget to the drawer
-        const legend = new Legend({
-          view: view
-        });
-        legend.container = "legendContent"; // Attach the legend to the drawer
+          // Define the extent if provided
+          const restrictedExtent = params.extent
+            ? new Extent({
+                xmin: params.extent[0],
+                ymin: params.extent[1],
+                xmax: params.extent[2],
+                ymax: params.extent[3],
+                spatialReference: { wkid: 4326 }
+              })
+            : null;
 
-        // Toggle the drawer
-        const legendDrawer = document.getElementById("legendDrawer");
-        const toggleArrow = document.getElementById("toggleArrow");
-        const toggleButton = document.getElementById("toggleButton");
-        const viewDiv = document.getElementById("viewDiv");
+          // Create the view (center/zoom will be set after map loads if not provided)
+          const view = new MapView({
+            container: "viewDiv",
+            map: webMap,
+            constraints: {
+              minZoom: params.minZoom, // Minimum zoom level
+              maxZoom: params.maxZoom, // Maximum zoom level
+              geometry: restrictedExtent, // Restrict panning to this extent
+              rotationEnabled: false // Optional: Disable map rotation
+            }
+          });
 
-        toggleArrow.addEventListener("click", function () {
-          if (legendDrawer.classList.contains("collapsed")) {
+          // Set center/zoom or extent after map loads if not provided
+          webMap.when().then(() => {
+            if (params.extent) {
+              view.extent = restrictedExtent;
+            } else if (webMap.initialViewProperties && webMap.initialViewProperties.viewpoint && webMap.initialViewProperties.viewpoint.targetGeometry) {
+              view.extent = webMap.initialViewProperties.viewpoint.targetGeometry;
+            }
+            if (params.center) {
+              view.center = params.center;
+              if (params.minZoom) view.zoom = params.minZoom;
+            } else if (webMap.initialViewProperties && webMap.initialViewProperties.viewpoint && webMap.initialViewProperties.viewpoint.targetGeometry) {
+              // Optionally set center/zoom from map default
+              const geom = webMap.initialViewProperties.viewpoint.targetGeometry;
+              if (geom && geom.type === "extent") {
+                view.center = [
+                  (geom.xmin + geom.xmax) / 2,
+                  (geom.ymin + geom.ymax) / 2
+                ];
+                view.zoom = view.zoom || 11;
+              }
+            }
+          });
+
+          // Add a scale bar
+          const scaleBar = new ScaleBar({
+            view: view,
+            unit: "dual" // Displays both metric and imperial units
+          });
+          view.ui.add(scaleBar, {
+            position: "bottom-left"
+          });
+
+          // Add the legend widget to the drawer
+          const legend = new Legend({
+            view: view
+          });
+          legend.container = "legendContent"; // Attach the legend to the drawer
+
+          // Toggle the drawer
+          const legendDrawer = document.getElementById("legendDrawer");
+          const toggleArrow = document.getElementById("toggleArrow");
+          const toggleButton = document.getElementById("toggleButton");
+          const viewDiv = document.getElementById("viewDiv");
+
+          toggleArrow.addEventListener("click", function () {
+            if (legendDrawer.classList.contains("collapsed")) {
+              legendDrawer.classList.remove("collapsed");
+              viewDiv.classList.remove("expanded");
+              toggleArrow.textContent = "\u25C0";
+              toggleButton.classList.remove("visible");
+            } else {
+              legendDrawer.classList.add("collapsed");
+              viewDiv.classList.add("expanded");
+              toggleArrow.textContent = "\u25B6";
+              toggleButton.classList.add("visible");
+            }
+          });
+
+          // Reopen the legend when the toggle button is clicked
+          toggleButton.addEventListener("click", function () {
             legendDrawer.classList.remove("collapsed");
             viewDiv.classList.remove("expanded");
-            toggleArrow.textContent = "◀";
+            toggleArrow.textContent = "\u25C0";
             toggleButton.classList.remove("visible");
-          } else {
-            legendDrawer.classList.add("collapsed");
-            viewDiv.classList.add("expanded");
-            toggleArrow.textContent = "▶";
-            toggleButton.classList.add("visible");
-          }
-        });
-
-        // Reopen the legend when the toggle button is clicked
-        toggleButton.addEventListener("click", function () {
-          legendDrawer.classList.remove("collapsed");
-          viewDiv.classList.remove("expanded");
-          toggleArrow.textContent = "◀";
-          toggleButton.classList.remove("visible");
+          });
+        }).catch(err => {
+          alert('Error loading API key for client: ' + err.message);
         });
       });
     </script>

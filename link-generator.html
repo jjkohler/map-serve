@@ -44,8 +44,8 @@
     <p>Fill in the parameters below to generate a link to your map:</p>
 
     <form id="mapForm">
-      <label for="apiKey">API Key:</label>
-      <input type="text" id="apiKey" name="apiKey" placeholder="Enter your API key" required>
+      <label for="project">Project:</label>
+      <input type="text" id="project" name="project" placeholder="Enter project name (e.g., Manchester)" required>
 
       <label for="itemId">Map Item ID:</label>
       <input type="text" id="itemId" name="itemId" placeholder="Enter the map item ID" required>
@@ -78,7 +78,7 @@
         const baseUrl = "https://jjkohler.github.io/map-serve/map.html";
 
         // Get form values
-        const apiKey = document.getElementById("apiKey").value;
+        const project = document.getElementById("project").value;
         const itemId = document.getElementById("itemId").value;
         const center = document.getElementById("center").value;
         const minZoom = document.getElementById("minZoom").value;
@@ -88,7 +88,7 @@
 
         // Build the query string
         const params = new URLSearchParams();
-        if (apiKey) params.append("apiKey", apiKey);
+        if (project) params.append("project", project);
         if (itemId) params.append("itemId", itemId);
         if (center) params.append("center", center);
         if (minZoom) params.append("minZoom", minZoom);
