@@ -63,11 +63,11 @@
 
   <body>
     <div id="appContainer">
-      <!-- Calcite Panel for Legend -->
-      <calcite-panel id="legendPanel" width-scale="m" style="min-width:220px;max-width:350px;">
+      <!-- Floating Calcite Panel for Legend -->
+      <calcite-panel id="legendPanel" width-scale="s" style="position:absolute;top:90px;left:16px;z-index:100;min-width:220px;max-width:350px;box-shadow:0 2px 6px rgba(0,0,0,0.15);background:white;">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:0 1rem 0 0.5rem;">
           <span style="font-weight:bold;font-size:1.1em;">Legend</span>
-          <calcite-action id="collapseLegend" icon="legend" text="Collapse Legend" scale="m"></calcite-action>
+          <calcite-action id="collapseLegend" icon="x" text="Close Legend" scale="m"></calcite-action>
         </div>
         <div id="legendContent"></div>
       </calcite-panel>
@@ -210,8 +210,9 @@
             expandLegend.style.display = "none";
           });
 
-          // Place the expand button inside the map view container for proper stacking
+          // Place the legend panel and expand button inside the map view container for proper stacking
           const viewDiv = document.getElementById("viewDiv");
+          viewDiv.appendChild(legendPanel);
           viewDiv.appendChild(expandLegend);
         }).catch(err => {
           alert('Error loading API key for client: ' + err.message);
