@@ -97,10 +97,11 @@
           return {
             project: params.get("project"),
             itemId: params.get("itemId"),
-            center: params.get("center") ? params.get("center").split(",").map(Number) : [-117.81, 34.03],
-            minZoom: params.get("minZoom") ? parseInt(params.get("minZoom")) : 10,
-            maxZoom: params.get("maxZoom") ? parseInt(params.get("maxZoom")) : 13,
-            extent: params.get("extent") ? params.get("extent").split(",").map(Number) : null
+            // Only include these if present in the URL
+            center: params.get("center") ? params.get("center").split(",").map(Number) : undefined,
+            minZoom: params.get("minZoom") ? parseInt(params.get("minZoom")) : undefined,
+            maxZoom: params.get("maxZoom") ? parseInt(params.get("maxZoom")) : undefined,
+            extent: params.get("extent") ? params.get("extent").split(",").map(Number) : undefined
           };
         }
 
@@ -140,17 +141,6 @@
             }
           });
 
-          // Define the extent if provided
-          const restrictedExtent = params.extent
-            ? new Extent({
-                xmin: params.extent[0],
-                ymin: params.extent[1],
-                xmax: params.extent[2],
-                ymax: params.extent[3],
-                spatialReference: { wkid: 4326 }
-              })
-            : null;
-
           // Create the view (center/zoom will be set after map loads if not provided)
           const view = new MapView({
             container: "viewDiv",
@@ -163,16 +153,30 @@
           // After the web map loads, set min/max zoom based on the default zoom
           webMap.when().then(() => {
             view.when(() => {
-              const defaultZoom = view.zoom;
-              view.constraints.minZoom = defaultZoom - 2;
-              view.constraints.maxZoom = defaultZoom + 4;
-              // Seamlessly set panning constraint at minZoom
-              const originalZoom = view.zoom;
-              view.goTo({ zoom: view.constraints.minZoom }, { animate: false }).then(() => {
-                const minZoomExtent = view.extent.clone();
+              // Only override min/max zoom if provided in URL
+              if (typeof params.minZoom === 'number') view.constraints.minZoom = params.minZoom;
+              else view.constraints.minZoom = view.zoom - 2;
+              if (typeof params.maxZoom === 'number') view.constraints.maxZoom = params.maxZoom;
+              else view.constraints.maxZoom = view.zoom + 4;
+              // Only set extent if provided
+              if (params.extent) {
+                const minZoomExtent = new Extent({
+                  xmin: params.extent[0],
+                  ymin: params.extent[1],
+                  xmax: params.extent[2],
+                  ymax: params.extent[3],
+                  spatialReference: { wkid: 4326 }
+                });
                 view.constraints.geometry = minZoomExtent;
-                return view.goTo({ zoom: originalZoom }, { animate: false });
-              });
+              } else {
+                // Default: restrict panning to minZoom extent
+                const originalZoom = view.zoom;
+                view.goTo({ zoom: view.constraints.minZoom }, { animate: false }).then(() => {
+                  const minZoomExtent = view.extent.clone();
+                  view.constraints.geometry = minZoomExtent;
+                  return view.goTo({ zoom: originalZoom }, { animate: false });
+                });
+              }
             });
           });
 
@@ -199,6 +203,7 @@
           homeButton.setAttribute("scale", "s");
           homeButton.setAttribute("text", "Home");
           homeButton.style.margin = "0";
+          homeButton.style.marginBottom = "8px";
           homeButton.style.boxShadow = "0 2px 6px rgba(0,0,0,0.15)";
           homeButton.style.borderRadius = "6px";
           homeButton.style.background = "white";
@@ -262,9 +267,6 @@
               zoomWidget.container.style.boxShadow = "none";
               zoomWidget.container.style.border = "none";
               zoomWidget.container.style.backdropFilter = "none";
-              // Add margin below the fullscreen button for spacing
-              fullscreenButton.style.marginBottom = "8px";
-              homeButton.style.marginBottom = "8px";
               // Insert fullscreen button at the top, then home button, then zoom buttons
               zoomWidget.container.insertBefore(fullscreenButton, zoomWidget.container.firstChild);
               zoomWidget.container.insertBefore(homeButton, zoomWidget.container.children[1]);
