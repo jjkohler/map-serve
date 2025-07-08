@@ -186,9 +186,6 @@
           // Move the scale bar to the bottom-left in the map UI
           view.ui.add(webScaleBar, "bottom-left");
 
-          // Move the zoom controls to the bottom-right
-          view.ui.move(["zoom"], "bottom-right");
-
           // Add a Calcite home button to return to default zoom/center
           let defaultCenter, defaultZoom;
           view.when(() => {
@@ -210,8 +207,21 @@
               view.goTo({ center: defaultCenter, zoom: defaultZoom });
             }
           });
-          // Add the home button to the bottom-right, above the zoom controls in the same column
-          view.ui.add(homeButton, { position: "bottom-right", index: 0 });
+
+          // Move the zoom controls to the bottom-right
+          view.ui.move(["zoom"], "bottom-right");
+
+          // Add the home button directly into the zoom widget's container for vertical stacking
+          view.when(() => {
+            const zoomWidget = view.ui.find("zoom");
+            if (zoomWidget && zoomWidget.container) {
+              // Insert home button at the top of the zoom widget's container
+              zoomWidget.container.insertBefore(homeButton, zoomWidget.container.firstChild);
+            } else {
+              // Fallback: add to bottom-right if zoom widget not found
+              view.ui.add(homeButton, { position: "bottom-right", index: 0 });
+            }
+          });
 
           // --- Legend panel and expand button alignment ---
           // Use a fixed position for the legend panel relative to the top left corner
