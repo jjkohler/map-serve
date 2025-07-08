@@ -52,8 +52,18 @@
         document.getElementById("error").textContent = err.message;
         return;
       }
-      // Set the API key for the embeddable component
-      window.arcgisEmbeddableComponents.setApiKey(apiKey);
+      // Set the API key for the embeddable component when ready
+      function setApiKeyWhenReady(apiKey) {
+        function trySet() {
+          if (window.arcgisEmbeddableComponents && window.arcgisEmbeddableComponents.setApiKey) {
+            window.arcgisEmbeddableComponents.setApiKey(apiKey);
+          } else {
+            setTimeout(trySet, 50);
+          }
+        }
+        trySet();
+      }
+      setApiKeyWhenReady(apiKey);
 
       // Now add the embedded map
       const map = document.createElement("arcgis-embedded-map");
