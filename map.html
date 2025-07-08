@@ -208,18 +208,54 @@
             }
           });
 
+          // Create the Calcite fullscreen button
+          const fullscreenButton = document.createElement("calcite-action");
+          fullscreenButton.setAttribute("icon", "maximize");
+          fullscreenButton.setAttribute("scale", "s");
+          fullscreenButton.setAttribute("text", "Full Screen");
+          fullscreenButton.style.margin = "0";
+          fullscreenButton.style.marginBottom = "8px";
+          fullscreenButton.style.boxShadow = "0 2px 6px rgba(0,0,0,0.15)";
+          fullscreenButton.style.borderRadius = "6px";
+          fullscreenButton.style.background = "white";
+          fullscreenButton.addEventListener("click", () => {
+            const elem = document.getElementById("appContainer");
+            if (!document.fullscreenElement) {
+              if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+              } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+              } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+              }
+            } else {
+              if (document.exitFullscreen) {
+                document.exitFullscreen();
+              } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+              } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+              }
+            }
+          });
+
           // Move the zoom controls to the bottom-right
           view.ui.move(["zoom"], "bottom-right");
 
-          // Add the home button directly into the zoom widget's container for vertical stacking
+          // Add the home button and fullscreen button directly into the zoom widget's container for vertical stacking
           view.when(() => {
             const zoomWidget = view.ui.find("zoom");
             if (zoomWidget && zoomWidget.container) {
-              // Insert home button at the top of the zoom widget's container
-              zoomWidget.container.insertBefore(homeButton, zoomWidget.container.firstChild);
+              // Add margin below the fullscreen button for spacing
+              fullscreenButton.style.marginBottom = "8px";
+              homeButton.style.marginBottom = "8px";
+              // Insert fullscreen button at the top, then home button, then zoom buttons
+              zoomWidget.container.insertBefore(fullscreenButton, zoomWidget.container.firstChild);
+              zoomWidget.container.insertBefore(homeButton, zoomWidget.container.children[1]);
             } else {
               // Fallback: add to bottom-right if zoom widget not found
-              view.ui.add(homeButton, { position: "bottom-right", index: 0 });
+              view.ui.add(fullscreenButton, { position: "bottom-right", index: 0 });
+              view.ui.add(homeButton, { position: "bottom-right", index: 1 });
             }
           });
 
