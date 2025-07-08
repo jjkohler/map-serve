@@ -214,15 +214,12 @@
           view.ui.add(homeButton, { position: "bottom-right", index: 0 });
 
           // --- Legend panel and expand button alignment ---
-          // Ensure the legend panel always opens at the same vertical level as the legend expand button
+          // Use a fixed position for the legend panel relative to the top left corner
           function alignLegendPanel() {
-            const expandRect = expandLegend.getBoundingClientRect();
-            const containerRect = document.getElementById("appContainer").getBoundingClientRect();
-            // Calculate offset relative to appContainer
-            const top = expandRect.top - containerRect.top;
-            legendPanel.style.top = `${top}px`;
+            legendPanel.style.top = "90px"; // Fixed offset from the top
+            legendPanel.style.left = "16px"; // Fixed offset from the left
           }
-          // When the legend is collapsed, show the expand button at the same height
+          // When the legend is collapsed, show the expand button
           expandLegend.addEventListener("click", function () {
             alignLegendPanel();
             legendPanel.hidden = false;
@@ -236,12 +233,9 @@
           });
           // Initial alignment
           alignLegendPanel();
-          // Ensure initial legend panel position matches expand button
-          if (!legendPanel.hidden) {
-            alignLegendPanel();
-          }
-          // Keep alignment on window resize
+          // Keep alignment on window resize (optional, but harmless)
           window.addEventListener("resize", alignLegendPanel);
+
           // Add the legend widget to the drawer
           const legend = new Legend({
             view: view
