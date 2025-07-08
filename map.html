@@ -246,6 +246,11 @@
           view.when(() => {
             const zoomWidget = view.ui.find("zoom");
             if (zoomWidget && zoomWidget.container) {
+              // Make the zoom widget container background transparent
+              zoomWidget.container.style.background = "none";
+              zoomWidget.container.style.boxShadow = "none";
+              zoomWidget.container.style.border = "none";
+              zoomWidget.container.style.backdropFilter = "none";
               // Add margin below the fullscreen button for spacing
               fullscreenButton.style.marginBottom = "8px";
               homeButton.style.marginBottom = "8px";
