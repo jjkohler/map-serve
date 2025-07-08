@@ -7,13 +7,21 @@
     body { font-family: sans-serif; background: #f8f8f8; margin: 0; padding: 0; }
     .container { max-width: 600px; margin: 40px auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 2rem; }
     textarea { width: 100%; min-height: 80px; font-family: monospace; font-size: 1em; margin-bottom: 1em; }
+    #embed-area { margin-top: 2em; }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>Paste Embed Code to Test</h2>
-    <textarea placeholder="<iframe src="map.html?project=Manchester&itemId=688a64eaa26e45189f50d02085c36b86" style="width:700px;height:600px;border:none;" allowfullscreen></iframe>"></textarea>
-    <p style="color:#888;font-size:0.95em;">Paste your embed code above, then copy and paste it into a new HTML file to test.</p>
+    <textarea id="embedcode" placeholder="Paste iframe embed code here..."></textarea>
+    <button id="show" style="padding:0.75em 1.5em;font-size:1em;">Show Embed</button>
+    <div id="embed-area"></div>
   </div>
+  <script>
+    document.getElementById('show').addEventListener('click', function() {
+      const code = document.getElementById('embedcode').value.trim();
+      document.getElementById('embed-area').innerHTML = code;
+    });
+  </script>
 </body>
 </html>
