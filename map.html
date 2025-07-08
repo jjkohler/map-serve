@@ -65,15 +65,16 @@
     <div id="appContainer">
       <!-- Calcite Panel for Legend -->
       <calcite-panel id="legendPanel" heading="Legend" width-scale="m" style="min-width:220px;max-width:350px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:0 1rem 0 0.5rem;">
+          <span style="font-weight:bold;font-size:1.1em;">Legend</span>
+          <calcite-action id="collapseLegend" icon="chevron-left" text="Collapse Legend" scale="m"></calcite-action>
+        </div>
         <div id="legendContent"></div>
-        <calcite-action-bar slot="footer">
-          <calcite-action id="collapseLegend" icon="chevron-left" text="Collapse"></calcite-action>
-        </calcite-action-bar>
       </calcite-panel>
       <!-- Map container -->
       <div id="viewDiv" style="flex:1;"></div>
     </div>
-    <calcite-fab id="expandLegend" icon="chevron-right" text="Show Legend" style="position:absolute;top:50%;left:0;transform:translate(-50%,-50%);display:none;z-index:100;"></calcite-fab>
+    <calcite-fab id="expandLegend" icon="chevron-right" text="Show Legend" style="position:absolute;top:50%;left:0;transform:translate(-50%,-50%);display:none;z-index:100;background:var(--calcite-ui-blue-1);"></calcite-fab>
 
     <script>
       require([
@@ -201,6 +202,7 @@
           collapseLegend.addEventListener("click", function () {
             legendPanel.hidden = true;
             expandLegend.style.display = "block";
+            expandLegend.focus();
           });
           expandLegend.addEventListener("click", function () {
             legendPanel.hidden = false;
