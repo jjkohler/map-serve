@@ -166,10 +166,10 @@
               const defaultZoom = view.zoom;
               view.constraints.minZoom = defaultZoom - 3;
               view.constraints.maxZoom = defaultZoom + 3;
-              // Go to minZoom, get the extent, then restrict panning
+              // Restrict panning to the extent visible at minZoom
               const originalZoom = view.zoom;
               view.zoom = view.constraints.minZoom;
-              view.whenLayerView(webMap.layers.getItemAt(0)).then(() => {
+              view.whenOnce('extent').then(() => {
                 setTimeout(() => {
                   const minZoomExtent = view.extent.clone();
                   view.constraints.geometry = minZoomExtent;
