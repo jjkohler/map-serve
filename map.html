@@ -21,39 +21,6 @@
         width: 100%;
       }
 
-      /* Left-side drawer */
-      #legendDrawer {
-        width: 300px; /* Width of the drawer */
-        background: white;
-        border-right: 1px solid #ccc;
-        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
-        transition: transform 0.3s ease, width 0.3s ease; /* Smooth sliding effect */
-        z-index: 10;
-        position: relative;
-      }
-
-      #legendDrawer.collapsed {
-        width: 0; /* Collapse the drawer */
-        transform: translateX(-100%); /* Slide the drawer out of view */
-      }
-
-      #legendHeader {
-        padding: 10px;
-        background: #f4f4f4;
-        border-bottom: 1px solid #ccc;
-        font-weight: bold;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
-
-      #legendContent {
-        padding: 10px;
-        overflow-y: auto;
-        height: calc(100% - 40px); /* Adjust height to account for the header */
-      }
-
       /* Map container */
       #viewDiv {
         flex: 1;
@@ -87,25 +54,26 @@
     <!-- Load the ArcGIS Maps SDK for JavaScript -->
     <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css">
     <script src="https://js.arcgis.com/4.32/"></script>
+
+    <!-- Load Calcite Components -->
+    <link rel="stylesheet" href="https://js.arcgis.com/calcite-components/2.7.1/calcite.css" />
+    <script type="module" src="https://js.arcgis.com/calcite-components/2.7.1/calcite.esm.js"></script>
+    <script nomodule src="https://js.arcgis.com/calcite-components/2.7.1/calcite.js"></script>
   </head>
 
   <body>
     <div id="appContainer">
-      <!-- Left-side drawer -->
-      <div id="legendDrawer">
-        <div id="legendHeader">
-          Legend
-          <span id="toggleArrow">◀</span>
-        </div>
+      <!-- Calcite Panel for Legend -->
+      <calcite-panel id="legendPanel" heading="Legend" width-scale="m" style="min-width:220px;max-width:350px;">
         <div id="legendContent"></div>
-      </div>
-
+        <calcite-action-bar slot="footer">
+          <calcite-action id="collapseLegend" icon="chevron-left" text="Collapse"></calcite-action>
+        </calcite-action-bar>
+      </calcite-panel>
       <!-- Map container -->
-      <div id="viewDiv" class="expanded"></div>
+      <div id="viewDiv" style="flex:1;"></div>
     </div>
-
-    <!-- Toggle button for reopening the legend -->
-    <div id="toggleButton" class="visible">▶</div>
+    <calcite-fab id="expandLegend" icon="chevron-right" text="Show Legend" style="position:absolute;top:50%;left:0;transform:translate(-50%,-50%);display:none;z-index:100;"></calcite-fab>
 
     <script>
       require([
@@ -226,32 +194,17 @@
           });
           legend.container = "legendContent"; // Attach the legend to the drawer
 
-          // Toggle the drawer
-          const legendDrawer = document.getElementById("legendDrawer");
-          const toggleArrow = document.getElementById("toggleArrow");
-          const toggleButton = document.getElementById("toggleButton");
-          const viewDiv = document.getElementById("viewDiv");
-
-          toggleArrow.addEventListener("click", function () {
-            if (legendDrawer.classList.contains("collapsed")) {
-              legendDrawer.classList.remove("collapsed");
-              viewDiv.classList.remove("expanded");
-              toggleArrow.textContent = "\u25C0";
-              toggleButton.classList.remove("visible");
-            } else {
-              legendDrawer.classList.add("collapsed");
-              viewDiv.classList.add("expanded");
-              toggleArrow.textContent = "\u25B6";
-              toggleButton.classList.add("visible");
-            }
+          // Remove old legend drawer/toggle logic and use Calcite actions
+          const legendPanel = document.getElementById("legendPanel");
+          const collapseLegend = document.getElementById("collapseLegend");
+          const expandLegend = document.getElementById("expandLegend");
+          collapseLegend.addEventListener("click", function () {
+            legendPanel.hidden = true;
+            expandLegend.style.display = "block";
           });
-
-          // Reopen the legend when the toggle button is clicked
-          toggleButton.addEventListener("click", function () {
-            legendDrawer.classList.remove("collapsed");
-            viewDiv.classList.remove("expanded");
-            toggleArrow.textContent = "\u25C0";
-            toggleButton.classList.remove("visible");
+          expandLegend.addEventListener("click", function () {
+            legendPanel.hidden = false;
+            expandLegend.style.display = "none";
           });
         }).catch(err => {
           alert('Error loading API key for client: ' + err.message);
