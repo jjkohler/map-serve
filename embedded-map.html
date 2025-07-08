@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Embedded Map with Project-based API Key</title>
+  <!-- Embeddable Components -->
+  <script type="module" src="https://js.arcgis.com/embeddable-components/4.33/arcgis-embeddable-components.esm.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2em; }
+    #error { color: red; }
+  </style>
+</head>
+<body>
+  <div id="error"></div>
+  <div id="map-container"></div>
+  <script type="module">
+    // Helper: get URL param
+    function getProjectParam() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("project");
+    }
+
+    // Helper: fetch API key from CSV
+    async function fetchApiKey(project) {
+      const resp = await fetch("api-keys.csv");
+      if (!resp.ok) throw new Error("Could not load api-keys.csv");
+      const text = await resp.text();
+      const lines = text.trim().split(/\r?\n/);
+      const headers = lines[0].split(",");
+      for (let i = 1; i < lines.length; i++) {
+        const row = lines[i].split(",");
+        const rowObj = {};
+        headers.forEach((h, idx) => rowObj[h.trim()] = row[idx] ? row[idx].trim() : "");
+        if (rowObj["Client"] && rowObj["Client"].toLowerCase() === project.toLowerCase()) {
+          return rowObj["API Key"];
+        }
+      }
+      throw new Error("Project not found in api-keys.csv");
+    }
+
+    // Main logic
+    (async () => {
+      const project = getProjectParam();
+      if (!project) {
+        document.getElementById("error").textContent = "No project specified in URL.";
+        return;
+      }
+      let apiKey;
+      try {
+        apiKey = await fetchApiKey(project);
+      } catch (err) {
+        document.getElementById("error").textContent = err.message;
+        return;
+      }
+      // Set the API key for the embeddable component
+      window.arcgisEmbeddableComponents.setApiKey(apiKey);
+
+      // Now add the embedded map
+      const map = document.createElement("arcgis-embedded-map");
+      map.setAttribute("style", "height:600px;width:700px;");
+      map.setAttribute("item-id", "388a3c30426641c4af01bf067478a271");
+      map.setAttribute("theme", "light");
+      map.setAttribute("legend-enabled", "");
+      map.setAttribute("center", "-70.75617723935639,43.075319459176455");
+      map.setAttribute("scale", "9027.977411");
+      map.setAttribute("portal-url", "https://flowassessment.maps.arcgis.com");
+      document.getElementById("map-container").appendChild(map);
+    })();
+  </script>
+</body>
+</html>
