@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ArcGIS Embedded Map Code Generator</title>
+  <link rel="stylesheet" href="https://js.arcgis.com/calcite-components/2.7.1/calcite.css" />
+  <script type="module" src="https://js.arcgis.com/calcite-components/2.7.1/calcite.esm.js"></script>
+  <style>
+    body { font-family: var(--calcite-font-family); background: #f8f8f8; margin: 0; padding: 0; }
+    .container { max-width: 520px; margin: 40px auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 2rem; }
+    .output-area { background: #f4f4f4; border-radius: 6px; padding: 1rem; font-family: monospace; margin-top: 1.5rem; word-break: break-all; }
+    .preview-frame { border: 1px solid #ccc; border-radius: 6px; margin-top: 1.5rem; width: 100%; min-height: 400px; }
+    label { font-weight: 500; margin-bottom: 0.25rem; display: block; }
+    .form-row { margin-bottom: 1.25rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>ArcGIS Embedded Map Code Generator</h2>
+    <div class="form-row">
+      <label for="project">Project Name</label>
+      <calcite-input id="project" placeholder="e.g. MyProject" clearable></calcite-input>
+    </div>
+    <div class="form-row">
+      <label for="itemid">Map Item ID</label>
+      <calcite-input id="itemid" placeholder="e.g. 688a64eaa26e45189f50d02085c36b86" clearable></calcite-input>
+    </div>
+    <calcite-button id="generate" width="full" appearance="solid" scale="m">Generate Embed Code</calcite-button>
+    <div class="output-area" id="output" style="display:none;"></div>
+    <div id="preview" style="display:none;"></div>
+  </div>
+  <script type="module">
+    const projectInput = document.getElementById('project');
+    const itemidInput = document.getElementById('itemid');
+    const output = document.getElementById('output');
+    const preview = document.getElementById('preview');
+    document.getElementById('generate').addEventListener('click', () => {
+      const itemId = itemidInput.value.trim();
+      if (!itemId) {
+        output.style.display = 'block';
+        output.textContent = 'Please enter a Map Item ID.';
+        preview.style.display = 'none';
+        preview.innerHTML = '';
+        return;
+      }
+      const project = projectInput.value.trim();
+      let attrs = `item-id="${itemId}"`;
+      if (project) attrs += ` data-project="${project}"`;
+      const embedCode =
+`<iframe src="map.html?project=${encodeURIComponent(project)}&itemId=${encodeURIComponent(itemId)}" style="width:700px;height:600px;border:none;" allowfullscreen></iframe>`;
+      output.style.display = 'block';
+      output.textContent = embedCode;
+      // Show live preview
+      preview.style.display = 'block';
+      preview.innerHTML = `<iframe src="map.html?project=${encodeURIComponent(project)}&itemId=${encodeURIComponent(itemId)}" style="width:100%;height:400px;margin-top:1em;border:none;" allowfullscreen></iframe>`;
+    });
+  </script>
+</body>
+</html>
