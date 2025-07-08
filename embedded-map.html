@@ -57,6 +57,7 @@
         function trySet() {
           if (window.arcgisEmbeddableComponents && window.arcgisEmbeddableComponents.setApiKey) {
             window.arcgisEmbeddableComponents.setApiKey(apiKey);
+            document.getElementById("error").innerHTML += `<div style='color:green'>API key set: <code>${apiKey}</code></div>`;
           } else {
             setTimeout(trySet, 50);
           }
@@ -64,6 +65,8 @@
         trySet();
       }
       setApiKeyWhenReady(apiKey);
+
+      document.getElementById("error").innerHTML += `<div>Creating map with item-id: <b>688a64eaa26e45189f50d02085c36b86</b></div>`;
 
       // Now add the embedded map
       const map = document.createElement("arcgis-embedded-map");
