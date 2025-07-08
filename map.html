@@ -76,7 +76,7 @@
       <!-- Map container -->
       <div id="viewDiv" style="flex:1;position:relative;"></div>
       <!-- ArcGIS Scale Bar Web Component -->
-      <arcgis-scale-bar id="webScaleBar" style="position:absolute;bottom:16px;left:16px;z-index:99;" units="imperial" type="ruler"></arcgis-scale-bar>
+      <arcgis-scale-bar id="webScaleBar" style="position:absolute;bottom:16px;left:16px;z-index:99;" bar-style="ruler" unit="imperial"></arcgis-scale-bar>
     </div>
     <!-- Legend expand button, styled like a map widget -->
     <div id="expandLegendContainer"></div>
@@ -189,8 +189,8 @@
           // Bind the map view to the scale bar web component
           const webScaleBar = document.getElementById("webScaleBar");
           view.when().then(() => {
-            webScaleBar.setAttribute("units", "imperial");
-            webScaleBar.setAttribute("type", "ruler");
+            webScaleBar.setAttribute("unit", "imperial");
+            webScaleBar.setAttribute("bar-style", "ruler");
             webScaleBar.view = view;
           });
           // Move the scale bar to the bottom-left in the map UI
