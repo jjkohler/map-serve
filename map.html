@@ -201,22 +201,25 @@
           homeButton.setAttribute("icon", "home");
           homeButton.setAttribute("scale", "s");
           homeButton.setAttribute("text", "Home");
-          homeButton.style.margin = "0 0 8px 0";
+          homeButton.style.margin = "0";
           homeButton.style.boxShadow = "0 2px 6px rgba(0,0,0,0.15)";
           homeButton.style.borderRadius = "6px";
           homeButton.style.background = "white";
-          homeButton.style.display = "block";
+          homeButton.style.display = "flex";
+          homeButton.style.alignItems = "center";
+          homeButton.style.justifyContent = "center";
+          homeButton.style.width = "40px";
+          homeButton.style.height = "40px";
           homeButton.addEventListener("click", () => {
             if (defaultCenter && defaultZoom) {
               view.goTo({ center: defaultCenter, zoom: defaultZoom });
             }
           });
-          // Add the home button to the bottom-right, above the zoom controls
+          // Add the home button to the bottom-right, above the zoom controls in the same column
           view.ui.add(homeButton, { position: "bottom-right", index: 0 });
 
           // --- Legend panel and expand button alignment ---
-          // Move the legend expand button to match the vertical position of the legend panel
-          // (legendPanel, expandLegend, collapseLegend already declared above)
+          // Ensure the legend panel always opens at the same vertical level as the legend expand button
           function alignLegendPanel() {
             const expandRect = expandLegend.getBoundingClientRect();
             const containerRect = document.getElementById("appContainer").getBoundingClientRect();
@@ -226,19 +229,20 @@
           }
           // When the legend is collapsed, show the expand button at the same height
           expandLegend.addEventListener("click", function () {
+            alignLegendPanel();
             legendPanel.hidden = false;
             expandLegend.style.display = "none";
-            alignLegendPanel();
           });
           // When the legend is closed, show the expand button
           collapseLegend.addEventListener("click", function () {
+            alignLegendPanel();
             legendPanel.hidden = true;
             expandLegend.style.display = "block";
-            // Position expand button at the same height as the legend panel
-            alignLegendPanel();
           });
           // Initial alignment
           alignLegendPanel();
+          // Keep alignment on window resize
+          window.addEventListener("resize", alignLegendPanel);
           // Add the legend widget to the drawer
           const legend = new Legend({
             view: view
