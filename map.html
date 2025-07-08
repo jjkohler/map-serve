@@ -59,6 +59,8 @@
     <link rel="stylesheet" href="https://js.arcgis.com/calcite-components/2.7.1/calcite.css" />
     <script type="module" src="https://js.arcgis.com/calcite-components/2.7.1/calcite.esm.js"></script>
     <script nomodule src="https://js.arcgis.com/calcite-components/2.7.1/calcite.js"></script>
+    <!-- ArcGIS Web Components -->
+    <script type="module" src="https://js.arcgis.com/map-components/4.32/arcgis-map-components.esm.js"></script>
   </head>
 
   <body>
@@ -73,9 +75,11 @@
       </calcite-panel>
       <!-- Map container -->
       <div id="viewDiv" style="flex:1;position:relative;"></div>
+      <!-- ArcGIS Scale Bar Web Component -->
+      <arcgis-scale-bar id="webScaleBar" style="position:absolute;bottom:16px;right:16px;z-index:99;" units="imperial" type="ruler"></arcgis-scale-bar>
     </div>
     <!-- Legend expand button, styled like a map widget -->
-    <calcite-action id="expandLegend" icon="legend" text="Show Legend" scale="s" style="position:absolute;top:90px;left:16px;z-index:100;display:none;background:white;border-radius:4px;box-shadow:0 2px 6px rgba(0,0,0,0.15);"></calcite-action>
+    <div id="expandLegendContainer"></div>
 
     <script>
       require([
@@ -83,9 +87,9 @@
         "esri/WebMap",
         "esri/views/MapView",
         "esri/widgets/Legend",
-        "esri/widgets/ScaleBar",
+        // "esri/widgets/ScaleBar", // Remove old ScaleBar import
         "esri/geometry/Extent"
-      ], function (esriConfig, WebMap, MapView, Legend, ScaleBar, Extent) {
+      ], function (esriConfig, WebMap, MapView, Legend, Extent) {
         // Helper function to parse URL parameters
         function getUrlParams() {
           const params = new URLSearchParams(window.location.search);
@@ -181,14 +185,25 @@
             }
           });
 
-          // Add a scale bar
-          const scaleBar = new ScaleBar({
-            view: view,
-            unit: "dual" // Displays both metric and imperial units
-          });
-          view.ui.add(scaleBar, {
-            position: "bottom-left"
-          });
+          // Remove the old ScaleBar widget and add the new <arcgis-scale-bar> web component
+          // Remove:
+          // const scaleBar = new ScaleBar({
+          //   view: view,
+          //   unit: "dual" // Displays both metric and imperial units
+          // });
+          // view.ui.add(scaleBar, {
+          //   position: "bottom-right"
+          // });
+
+          // Add the new ArcGIS scale bar web component
+          const scaleBarEl = document.createElement("arcgis-scale-bar");
+          scaleBarEl.setAttribute("position", "bottom-right");
+          scaleBarEl.setAttribute("units", "imperial");
+          scaleBarEl.setAttribute("style", "box-shadow:0 2px 6px rgba(0,0,0,0.10);border-radius:6px;background:white;padding:4px 16px 4px 12px;min-width:120px;max-width:220px;font-size:1.1em;line-height:1.5;display:flex;align-items:center;");
+          // Bind the map view to the scale bar
+          scaleBarEl.view = view;
+          // Add to the map UI
+          view.ui.add(scaleBarEl, "bottom-right");
 
           // Add the legend widget to the drawer
           const legend = new Legend({
@@ -210,10 +225,12 @@
             expandLegend.style.display = "none";
           });
 
-          // Place the legend panel and expand button inside the map view container for proper stacking
+          // Remove previous manual positioning for expandLegend
+          // Add expandLegend to the map's UI for perfect alignment
+          view.ui.add(expandLegend, "top-left");
+          // Place the legend panel inside the map view container for proper stacking
           const viewDiv = document.getElementById("viewDiv");
           viewDiv.appendChild(legendPanel);
-          viewDiv.appendChild(expandLegend);
         }).catch(err => {
           alert('Error loading API key for client: ' + err.message);
         });
