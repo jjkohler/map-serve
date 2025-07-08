@@ -156,34 +156,17 @@
             container: "viewDiv",
             map: webMap,
             constraints: {
-              minZoom: params.minZoom, // Minimum zoom level
-              maxZoom: params.maxZoom, // Maximum zoom level
-              geometry: restrictedExtent, // Restrict panning to this extent
               rotationEnabled: false // Optional: Disable map rotation
             }
           });
 
-          // Set center/zoom or extent after map loads if not provided
+          // After the web map loads, set min/max zoom based on the default zoom
           webMap.when().then(() => {
-            if (params.extent) {
-              view.extent = restrictedExtent;
-            } else if (webMap.initialViewProperties && webMap.initialViewProperties.viewpoint && webMap.initialViewProperties.viewpoint.targetGeometry) {
-              view.extent = webMap.initialViewProperties.viewpoint.targetGeometry;
-            }
-            if (params.center) {
-              view.center = params.center;
-              if (params.minZoom) view.zoom = params.minZoom;
-            } else if (webMap.initialViewProperties && webMap.initialViewProperties.viewpoint && webMap.initialViewProperties.viewpoint.targetGeometry) {
-              // Optionally set center/zoom from map default
-              const geom = webMap.initialViewProperties.viewpoint.targetGeometry;
-              if (geom && geom.type === "extent") {
-                view.center = [
-                  (geom.xmin + geom.xmax) / 2,
-                  (geom.ymin + geom.ymax) / 2
-                ];
-                view.zoom = view.zoom || 11;
-              }
-            }
+            view.when(() => {
+              const defaultZoom = view.zoom;
+              view.constraints.minZoom = defaultZoom - 1;
+              view.constraints.maxZoom = defaultZoom + 1;
+            });
           });
 
           // Bind the map view to the scale bar web component
