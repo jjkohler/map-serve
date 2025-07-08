@@ -20,13 +20,14 @@
     <h2>ArcGIS Embedded Map Code Generator</h2>
     <div class="form-row">
       <label for="project">Project Name</label>
-      <calcite-input id="project" placeholder="e.g. MyProject" clearable></calcite-input>
+      <calcite-input id="project" placeholder="e.g. Manchester" clearable></calcite-input>
     </div>
     <div class="form-row">
       <label for="itemid">Map Item ID</label>
       <calcite-input id="itemid" placeholder="e.g. 688a64eaa26e45189f50d02085c36b86" clearable></calcite-input>
     </div>
     <calcite-button id="generate" width="full" appearance="solid" scale="m">Generate Embed Code</calcite-button>
+    <calcite-button id="copy" width="full" appearance="outline" scale="m" style="margin-top:0.5em;display:none;">Copy Code</calcite-button>
     <div class="output-area" id="output" style="display:none;"></div>
     <div id="preview" style="display:none;"></div>
   </div>
@@ -42,6 +43,7 @@
         output.textContent = 'Please enter a Map Item ID.';
         preview.style.display = 'none';
         preview.innerHTML = '';
+        document.getElementById('copy').style.display = 'none';
         return;
       }
       const project = projectInput.value.trim();
@@ -54,6 +56,17 @@
       // Show live preview
       preview.style.display = 'block';
       preview.innerHTML = `<iframe src="map.html?project=${encodeURIComponent(project)}&itemId=${encodeURIComponent(itemId)}" style="width:100%;height:400px;margin-top:1em;border:none;" allowfullscreen></iframe>`;
+      document.getElementById('copy').style.display = 'inline-block';
+    });
+    document.getElementById('copy').addEventListener('click', () => {
+      const code = output.textContent;
+      if (!code || code.startsWith('Please enter')) return;
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('copy');
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = orig; }, 1200);
+      });
     });
   </script>
 </body>
